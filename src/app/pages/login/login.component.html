@@ -1,0 +1,27 @@
+<div class="login-wrapper">
+    <div class="login">
+
+        <form name="form" class="login-form" (ngSubmit)="login()" #f="ngForm">
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input your username!">
+                    <nz-input-group nzPrefixIcon="user">
+                        <input nz-input type="text" name="username" [(ngModel)]="model.username" placeholder="Username"
+                            #username="ngModel" required />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input your Password!">
+                    <nz-input-group nzPrefixIcon="lock">
+                        <input nz-input type="password" name="password" [(ngModel)]="model.password" #password="ngModel"
+                            placeholder="Password" required />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+
+            <button nz-button class="login-form-button login-form-margin" nzType="primary">Log in</button>
+        </form>
+    </div>
+
+</div>

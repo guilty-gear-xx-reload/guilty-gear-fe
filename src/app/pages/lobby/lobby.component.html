@@ -1,0 +1,27 @@
+<nz-table #basicTable [nzData]="playerLobbies">
+    <thead>
+      <tr>
+        <th>Player</th>
+        <th>Status</th>
+        <th>Ping</th>
+        <th>Wins</th>
+        <th>Wins</th>
+        <th>Loses</th>
+        <th>Draws</th>
+        <th>Total</th>
+        <th>W/L</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of playerLobbies">
+        <td>{{data.nickname}}</td>
+        <td>{{data.status}}</td>
+        <td>{{data.ping}}</td>
+        <td>{{data.totalWins}}</td>
+        <td>{{data.totalLoses}}</td>
+        <td>{{data.totalDraws}}</td>
+        <td>{{data.totalGames}}</td>
+        <td>{{data.winToLoses}}</td>
+      </tr>
+    </tbody>
+  </nz-table>

@@ -1,0 +1,8 @@
+{
+    "/ggxxreload/*": {
+        "target": "http://localhost:80",
+        "secure": false,
+        "changeOrigin": true,
+        "timeout": 1800000
+      }
+}
