@@ -1,1 +1,60 @@
-<p>palette works!</p>
+<div>
+<canvas id="palette-canvas" #paletteCanvas [width]="paletteWidth" [height]="paletteHeight"></canvas>
+<canvas id="sprite-canvas" onclick="clickPaletteAndGetRgbColor(that)" #spriteCanvas></canvas>
+</div>
+<input hidden type="color" #colorPicker/>
+
+<nz-select style="width: 25%" (ngModelChange)="getDefaultPalette($event)"
+  nzShowSearch
+  nzAllowClear
+  nzPlaceHolder="Choose character"
+  [(ngModel)]="selectedCharacterName"
+  [ngModelOptions]="{ standalone: true }"
+>
+  <nz-option
+    *ngFor="let characterName of characterNames"
+    [nzLabel]=characterName
+    [nzValue]=characterName
+  ></nz-option>
+</nz-select>
+
+<div id="hidden-elements" [hidden]="!isCharacterSelected">
+  <nz-select style="width: 15%" (ngModelChange)="getSprite($event)"
+             nzShowSearch
+             nzAllowClear
+             nzPlaceHolder="Choose sprite position"
+             [(ngModel)]="selectedSpritePosition"
+             [ngModelOptions]="{ standalone: true }"
+  >
+    <nz-option
+      *ngFor="let i of numberOfPostures"
+      [nzLabel]=i
+      [nzValue]=i
+    ></nz-option>
+  </nz-select>
+
+  <nz-select style="width: 25%" (ngModelChange)="getCustomPalette($event)"
+             nzShowSearch
+             nzAllowClear
+             nzPlaceHolder="Choose custom palette"
+             [(ngModel)]="selectedCustomPalette"
+             [ngModelOptions]="{ standalone: true }"
+  >
+    <nz-option
+      *ngFor="let customPalette of customPalettes"
+      [nzLabel]=customPalette.paletteName
+      [nzValue]=customPalette
+      nzCustomContent>
+      <div>
+        <span>{{customPalette.paletteName}}</span>
+        <span nz-icon nzType="delete" (click)="deletePalette(customPalette.id)" style="float: right"></span>
+      </div>
+    </nz-option>
+  </nz-select>
+
+  <button nz-button nzType="default" (click)="savePalette()">Save</button>
+</div>
+
+<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Modification of palette" (nzOnCancel)="handleCancel()" (nzOnOk)="handleOk()">
+  <input nz-input placeholder="Palette name" #customPaletteInput [(ngModel)]="customPaletteName" />
+</nz-modal>

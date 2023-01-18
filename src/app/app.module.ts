@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import { IconsProviderModule } from './icons-provider.module';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
-import { FormsModule,ReactiveFormsModule  } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule  } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NZ_I18N } from 'ng-zorro-antd/i18n';
@@ -20,7 +20,11 @@ import { RequestInterceptor } from './security/request.interceptor';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import {NzInputModule} from 'ng-zorro-antd/input';
 import { MainComponent } from './pages/main/main.component';
-import { PaletteComponent } from './pages/palette/palette.component'
+import { PaletteComponent } from './pages/palette/palette.component';
+import {NzSelectModule} from 'ng-zorro-antd/select';
+import {NzButtonModule} from 'ng-zorro-antd/button';
+import {NzMessageModule} from 'ng-zorro-antd/message';
+import {NzModalModule} from 'ng-zorro-antd/modal';
 registerLocaleData(en);
 
 @NgModule({
@@ -29,21 +33,25 @@ registerLocaleData(en);
     LobbyComponent,
     LoginComponent,
     MainComponent,
-    PaletteComponent,
+    PaletteComponent
     ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    IconsProviderModule,
-    NzLayoutModule,
-    NzMenuModule,
-    FormsModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-    NzTableModule,
-    ReactiveFormsModule,
-    NzFormModule,
-    NzInputModule
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        IconsProviderModule,
+        NzLayoutModule,
+        NzMenuModule,
+        FormsModule,
+        HttpClientModule,
+        BrowserAnimationsModule,
+        NzTableModule,
+        ReactiveFormsModule,
+        NzFormModule,
+        NzInputModule,
+        NzSelectModule,
+        NzButtonModule,
+        NzMessageModule,
+        NzModalModule
     ],
   providers: [
     { provide: NZ_I18N, useValue: en_US },
@@ -51,6 +59,6 @@ registerLocaleData(en);
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule { 
+export class AppModule {
   constructor(){}
 }
