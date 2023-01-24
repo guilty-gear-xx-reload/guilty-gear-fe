@@ -3,9 +3,9 @@ export class PlayerLobby{
     nickname: string;
     status: boolean;
     ping: string;
-    totalWins:number;
-    totalLoses:number;
-    totalDraws:number;
-    totalGames:number;
-    winToLoses:number
+    totalWins: number;
+    totalLoses: number;
+    totalDraws: number;
+    totalGames: number;
+    winToLoses: number;
 }
