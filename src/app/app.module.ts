@@ -25,6 +25,7 @@ import {NzSelectModule} from 'ng-zorro-antd/select';
 import {NzButtonModule} from 'ng-zorro-antd/button';
 import {NzMessageModule} from 'ng-zorro-antd/message';
 import {NzModalModule} from 'ng-zorro-antd/modal';
+import {CanvasComponent} from "./pages/canvas/canvas.component";
 registerLocaleData(en);
 
 @NgModule({
@@ -33,7 +34,8 @@ registerLocaleData(en);
     LobbyComponent,
     LoginComponent,
     MainComponent,
-    PaletteComponent
+    PaletteComponent,
+    CanvasComponent
     ],
     imports: [
         BrowserModule,
