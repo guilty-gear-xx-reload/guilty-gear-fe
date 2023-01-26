@@ -151,6 +151,16 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     return color;
   }
 
+  random_rgba() {
+    var o = Math.round, r = Math.random, s = 255;
+    return {
+      r: o(r()*s),
+      g: o(r()*s),
+      b: o(r()*s),
+      a: r().toFixed(1)
+    }
+  }
+
   hoverPaletteAndGetCurrentIndex(event) {
     console.log("1")
     if (this.spriteColorIndexes === undefined || this.spriteColorIndexes === null) {
@@ -191,7 +201,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
           this.defaultPaletteColors.rgba[spriteIndexes[i]].b)
         let invertedHexColor = this.invertHex(hexColor);
         let invertedRgbaColor = this.hexToRgb(invertedHexColor);
-        hoverPixel(this.defaultPaletteColors, x, y, spriteIndexes[i], invertedRgbaColor);
+        hoverPixel(this.defaultPaletteColors, x, y, spriteIndexes[i], this.random_rgba());
       } else {
         drawPixel(this.defaultPaletteColors, x, y, spriteIndexes[i]);
       }
