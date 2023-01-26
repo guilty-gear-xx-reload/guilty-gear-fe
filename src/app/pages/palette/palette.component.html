@@ -1,8 +1,6 @@
 <div>
-<canvas id="palette-canvas" #paletteCanvas [width]="paletteWidth" [height]="paletteHeight"></canvas>
-<canvas id="sprite-canvas" onclick="clickPaletteAndGetRgbColor(that)" #spriteCanvas></canvas>
+<app-canvas [hidden]="!isCharacterSelected" [spriteColorIndexes]="spriteColorIndexes" [defaultPaletteColors]="defaultPaletteColors"></app-canvas>
 </div>
-<input hidden type="color" #colorPicker/>
 
 <nz-select style="width: 25%" (ngModelChange)="getDefaultPalette($event)"
   nzShowSearch
