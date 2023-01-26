@@ -2,6 +2,7 @@ import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@a
 import {Rgba} from "../../models/rgba";
 import {SpriteColorIndexes} from "../../models/sprite-color-indexes";
 import {PaletteColors} from "../../models/palette-colors";
+import {delay} from "rxjs/operators";
 
 @Component({
   selector: 'app-canvas',
@@ -33,7 +34,6 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   private colorPicker: ElementRef = {} as ElementRef;
   static clickedPaletteIndex: number;
 
-
   constructor() {
   }
 
@@ -43,6 +43,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.paletteCanvas.nativeElement.addEventListener('click', this.clickPaletteAndGetRgbColor.bind(this));
+    this.paletteCanvas.nativeElement.addEventListener('mousemove', this.hoverPaletteAndGetCurrentIndex.bind(this));
     this.colorPicker.nativeElement.addEventListener('input', this.onInputPaletteColor.bind(this));
   }
 
@@ -137,6 +138,99 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     console.log(CanvasComponent.clickedPaletteIndex);
     this.colorPicker.nativeElement.value = this.rgbToHex(r, g, b);
     this.colorPicker.nativeElement.click();
+  }
+
+  invertHex(hexTripletColor) {
+    var color = hexTripletColor;
+    color = color.substring(1); // remove #
+    color = parseInt(color, 16); // convert to integer
+    color = 0xFFFFFF ^ color; // invert three bytes
+    color = color.toString(16); // convert to hex
+    color = ("000000" + color).slice(-6); // pad with leading zeros
+    color = "#" + color; // prepend #
+    return color;
+  }
+
+  hoverPaletteAndGetCurrentIndex(event) {
+    console.log("1")
+    if (this.spriteColorIndexes === undefined || this.spriteColorIndexes === null) {
+      return;
+    }
+    let spriteIndexes = this.spriteColorIndexes.spriteColorIndexes;
+    // get hovered index
+    var elemLeft = this.paletteCanvas.nativeElement.offsetLeft + this.paletteCanvas.nativeElement.clientLeft;
+    var elemTop = this.paletteCanvas.nativeElement.offsetTop + this.paletteCanvas.nativeElement.clientTop;
+    var x = event.pageX - elemLeft;
+    var y = event.pageY - elemTop;
+
+
+    var hoveredPaletteIndex = this.calculateClickedPaletteIndex(x, y);
+
+    /// hover
+
+    // prepare canvas
+    let spriteWidth = this.spriteColorIndexes.width;
+    let spriteHeight = this.spriteColorIndexes.height
+    var context = this.spriteCanvas.nativeElement.getContext('2d');
+    var image = context.createImageData(spriteWidth, spriteHeight);
+    var data = image.data;
+
+    // draw sprite
+    var x = 0;
+    var y = 0;
+
+    for (const i in spriteIndexes) {
+      if (y == this.spriteColorIndexes.height) {
+        return;
+      }
+
+      if (spriteIndexes[i] === hoveredPaletteIndex) {
+        let hexColor = this.rgbToHex(
+          this.defaultPaletteColors.rgba[spriteIndexes[i]].r,
+          this.defaultPaletteColors.rgba[spriteIndexes[i]].g,
+          this.defaultPaletteColors.rgba[spriteIndexes[i]].b)
+        let invertedHexColor = this.invertHex(hexColor);
+        let invertedRgbaColor = this.hexToRgb(invertedHexColor);
+        hoverPixel(this.defaultPaletteColors, x, y, spriteIndexes[i], invertedRgbaColor);
+      } else {
+        drawPixel(this.defaultPaletteColors, x, y, spriteIndexes[i]);
+      }
+
+      x++;
+      if (x == this.spriteColorIndexes.width) {
+        x = 0;
+        y++;
+      }
+    }
+    swapBuffer();
+    function drawPixel(palette, x, y, indexToPalette) {
+      var roundedX = Math.round(x);
+      var roundedY = Math.round(y);
+
+      var index = 4 * (spriteWidth * roundedY + roundedX);
+
+      data[index] = palette.rgba[indexToPalette].r;
+      data[index + 1] = palette.rgba[indexToPalette].g;
+      data[index + 2] = palette.rgba[indexToPalette].b;
+      data[index + 3] = 255;
+    }
+
+    function hoverPixel(palette, x, y, indexToPalette, hoveredColor) {
+      var roundedX = Math.round(x);
+      var roundedY = Math.round(y);
+
+      var index = 4 * (spriteWidth * roundedY + roundedX);
+
+      data[index] = hoveredColor.r;
+      data[index + 1] = hoveredColor.g;
+      data[index + 2] = hoveredColor.b;
+      data[index + 3] = 255;
+    }
+
+    function swapBuffer() {
+      context.putImageData(image, 0, 0);
+    }
+
   }
 
   getElementPosition(element) {
