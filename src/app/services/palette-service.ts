@@ -28,7 +28,7 @@ export class PaletteService {
     });
   }
 
-  public getPalette(characterName: string): Observable<PaletteColors> {
+  public getPaletteByCharacterName(characterName: string): Observable<PaletteColors> {
     return this.http.get<PaletteColors>(`${this.baseUrl}/palettes/default/${characterName}`, {
       params: null,
     });
@@ -55,13 +55,13 @@ export class PaletteService {
     });
   }
 
-  public getCustomPalettes(characterName: string): Observable<PaletteColorsWithName[]> {
+  public getCustomPalettesByCharacterName(characterName: string): Observable<PaletteColorsWithName[]> {
     return this.http.get<PaletteColorsWithName[]>(`${this.baseUrl}/palettes/customm/${characterName}`, {
       params: null,
     });
   }
 
-  public getNumberOfPostures(characterName: string): Observable<number> {
+  public getPosturesByCharacterName(characterName: string): Observable<number> {
     return this.http.get<number>(`${this.baseUrl}/characters/postures/${characterName}/total-elements`, {
       params: null,
     });
