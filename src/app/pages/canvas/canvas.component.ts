@@ -20,7 +20,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   spriteColorIndexes: SpriteColorIndexes;
 
   @Input()
-  defaultPaletteColors: PaletteColors;
+  customPaletteColors: PaletteColors;
 
 
   @ViewChild('paletteCanvas')
@@ -63,7 +63,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     this.paletteCanvas.nativeElement.context = context;
   }
 
-  public drawSprite(spriteColorIndexes: SpriteColorIndexes) {
+  public drawSprite(spriteColorIndexes: SpriteColorIndexes, paletteColors: PaletteColors) {
     const imgWidth = spriteColorIndexes.width;
     const imgHeight = spriteColorIndexes.height;
     this.spriteCanvas.nativeElement.width = imgWidth;
@@ -79,7 +79,7 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       if (y == imgHeight) {
         return;
       }
-      drawPixel(this.defaultPaletteColors, x, y, indexToPalette);
+      drawPixel(paletteColors, x, y, indexToPalette);
       x++;
       if (x == imgWidth) {
         x = 0;
@@ -166,9 +166,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
 
       if (spriteIndexes[i] === hoveredPaletteIndex) {
-        hoverPixel(this.defaultPaletteColors, x, y, spriteIndexes[i], this.random_rgba());
+        hoverPixel(this.customPaletteColors, x, y, spriteIndexes[i], this.random_rgba());
       } else {
-        drawPixel(this.defaultPaletteColors, x, y, spriteIndexes[i]);
+        drawPixel(this.customPaletteColors, x, y, spriteIndexes[i]);
       }
 
       x++;
@@ -225,10 +225,10 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   onInputPaletteColor(event) {
     const colorPickerRgba = this.hexToRgb(event.target.value);
     const selectedPaletteIndex = CanvasComponent.clickedPaletteIndex;
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].r = colorPickerRgba.r;
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].g = colorPickerRgba.g;
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].b = colorPickerRgba.b;
-    this.drawSprite(this.spriteColorIndexes);
+    this.customPaletteColors.rgba[selectedPaletteIndex].r = colorPickerRgba.r;
+    this.customPaletteColors.rgba[selectedPaletteIndex].g = colorPickerRgba.g;
+    this.customPaletteColors.rgba[selectedPaletteIndex].b = colorPickerRgba.b;
+    this.drawSprite(this.spriteColorIndexes, this.customPaletteColors);
     const context = this.paletteCanvas.nativeElement.getContext('2d');
     context.fillStyle = 'rgb(' + colorPickerRgba.r + ',' + colorPickerRgba.g + ',' + colorPickerRgba.b + ')';
     const coordsByIndex = this.calculateCoordsByPaletteIndex(selectedPaletteIndex);

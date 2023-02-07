@@ -14,7 +14,9 @@ import {CanvasComponent} from "../canvas/canvas.component";
 })
 export class PaletteComponent implements OnInit {
   DEFAULT_POSTURE_POSITION = "0";
+
   defaultPaletteColors: PaletteColors;
+
   customPaletteColors: PaletteColors;
 
   spriteColorIndexes: SpriteColorIndexes;
@@ -27,13 +29,14 @@ export class PaletteComponent implements OnInit {
 
   isCharacterSelected: boolean;
   isModalVisible: boolean;
-  customPalettes: PaletteColorsWithName[];
+  customPalettes: PaletteColorsWithName[] = [];
 
   @ViewChild(CanvasComponent, {static: false})
   canvasComponent: CanvasComponent;
 
   @ViewChild('customPaletteInput')
   private customPaletteInput: ElementRef = {} as ElementRef;
+  test: PaletteColorsWithName;
 
   constructor(private paletteService: PaletteService, private messageService: NzMessageService) {
   }
@@ -51,9 +54,10 @@ export class PaletteComponent implements OnInit {
     this.selectedCharacterName = characterName;
     this.loadCustomPalettesByCharacterName(characterName);
     this.paletteService.getPaletteByCharacterName(characterName).subscribe(data => {
-      this.defaultPaletteColors = data;
+      this.defaultPaletteColors = JSON.parse(JSON.stringify(data));
+      this.customPaletteColors = data;
       this.canvasComponent.drawPalette(data.rgba);
-      this.loadAndDrawSprite(this.DEFAULT_POSTURE_POSITION);
+      this.loadAndDrawSprite(this.DEFAULT_POSTURE_POSITION, this.defaultPaletteColors);
       this.selectedSpritePosition = this.DEFAULT_POSTURE_POSITION;
 
       this.paletteService.getPosturesByCharacterName(characterName).subscribe(data => {
@@ -70,41 +74,59 @@ export class PaletteComponent implements OnInit {
   }
 
   public drawCustomPaletteAndSprite(customPalette: PaletteColorsWithName) {
+    console.log(customPalette)
     if (customPalette === undefined || customPalette === null) {
       this.selectedCustomPalette = null;
       this.customPaletteName = null;
+      this.customPaletteColors = JSON.parse(JSON.stringify(this.defaultPaletteColors));
+      this.canvasComponent.drawPalette(this.defaultPaletteColors.rgba);
+      this.canvasComponent.drawSprite(this.spriteColorIndexes, this.defaultPaletteColors);
     } else {
       this.canvasComponent.drawPalette(customPalette.rgba);
-      this.defaultPaletteColors.rgba = customPalette.rgba;
-      this.canvasComponent.drawSprite(this.spriteColorIndexes);
+      this.customPaletteColors.rgba = customPalette.rgba;
+      this.canvasComponent.drawSprite(this.spriteColorIndexes, this.customPaletteColors);
       this.customPaletteInput.nativeElement.value = customPalette.paletteName;
       this.customPaletteName = customPalette.paletteName;
     }
   }
 
-  public loadAndDrawSprite(postureId: string) {
+  public loadAndDrawSprite(postureId: string, paletteColors: PaletteColors) {
     this.paletteService.getSprite(this.selectedCharacterName, postureId).subscribe(data => {
       this.spriteColorIndexes = data;
-      this.canvasComponent.drawSprite(this.spriteColorIndexes)
+      this.canvasComponent.drawSprite(this.spriteColorIndexes, paletteColors)
     }, error => {
       console.log(error);
     });
   }
 
   public saveCustomPalette() {
+
     if (this.selectedCustomPalette === undefined || this.selectedCustomPalette === null) {
-      const paletteColorsCommand = new PaletteColorsCommand();
-      paletteColorsCommand.rgba = this.defaultPaletteColors.rgba;
+      let paletteColorsCommand = new PaletteColorsCommand();
+      paletteColorsCommand.rgba = this.customPaletteColors.rgba;
       paletteColorsCommand.paletteName = this.customPaletteName;
       paletteColorsCommand.characterName = this.selectedCharacterName;
       this.paletteService.savePalette(paletteColorsCommand).subscribe(data => {
+        console.log("FOR")
+        for(let i = 0;i<this.customPalettes.length ;i++){
+          console.log(this.customPalettes[i].rgba[0]);
+        }
         this.messageService.success("Palette has been saved correctly!");
         this.isModalVisible = false;
-        const newPaletteColorsWithName = new PaletteColorsWithName();
-        newPaletteColorsWithName.id = data;
-        newPaletteColorsWithName.paletteName = paletteColorsCommand.paletteName;
-        newPaletteColorsWithName.rgba = paletteColorsCommand.rgba;
-        this.customPalettes.push(newPaletteColorsWithName);
+        let newPaletteColorsWithName = {
+          id: data,
+          paletteName: paletteColorsCommand.paletteName,
+          rgba: paletteColorsCommand.rgba
+        };
+        // newPaletteColorsWithName.id = data;
+        // newPaletteColorsWithName.paletteName = paletteColorsCommand.paletteName;
+        // newPaletteColorsWithName.rgba = paletteColorsCommand.rgba;
+        //this.customPalettes.push(newPaletteColorsWithName); //todo napisuje wszystkie wartosci w tablicy
+        console.log("NEW" )
+        console.log(newPaletteColorsWithName.rgba[0])
+        this.customPalettes = [...this.customPalettes, newPaletteColorsWithName];
+
+        // this.loadAndDrawSelectedCharacter(this.selectedCharacterName);
         this.selectedCustomPalette = newPaletteColorsWithName;
       }, error => {
         console.log(error);
@@ -121,8 +143,9 @@ export class PaletteComponent implements OnInit {
       this.selectedCustomPalette = null;
       const index = this.customPalettes.findIndex(x => x.id == id);
       this.customPalettes.splice(index, 1);
-      this.canvasComponent.drawPalette(this.defaultPaletteColors.rgba); // TODO fix draw sprite
-      this.loadAndDrawSprite(this.DEFAULT_POSTURE_POSITION);
+      this.canvasComponent.drawPalette(this.defaultPaletteColors.rgba);
+      this.customPaletteColors = JSON.parse(JSON.stringify(this.defaultPaletteColors));
+      this.loadAndDrawSprite(this.DEFAULT_POSTURE_POSITION, this.defaultPaletteColors);
     }, error => {
       console.log(error);
     });
@@ -147,7 +170,7 @@ export class PaletteComponent implements OnInit {
 
   updateCustomPalette() {
     const paletteColorsCommand = new PaletteColorsCommand();
-    paletteColorsCommand.rgba = this.defaultPaletteColors.rgba;
+    paletteColorsCommand.rgba = this.customPaletteColors.rgba;
     paletteColorsCommand.paletteName = this.customPaletteName;
     paletteColorsCommand.characterName = this.selectedCharacterName;
     this.paletteService.updatePalette(paletteColorsCommand, this.selectedCustomPalette.id).subscribe(data => {

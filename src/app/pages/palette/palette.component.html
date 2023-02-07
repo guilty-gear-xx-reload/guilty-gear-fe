@@ -1,6 +1,6 @@
 <div>
   <app-canvas [hidden]="!isCharacterSelected" [spriteColorIndexes]="spriteColorIndexes"
-              [defaultPaletteColors]="defaultPaletteColors"></app-canvas>
+              [customPaletteColors]="customPaletteColors"></app-canvas>
 </div>
 
 <nz-select style="width: 25%" (ngModelChange)="loadAndDrawSelectedCharacter($event)"
@@ -18,7 +18,7 @@
 </nz-select>
 
 <div id="hidden-elements" [hidden]="!isCharacterSelected">
-  <nz-select style="width: 15%" (ngModelChange)="loadAndDrawSprite($event)"
+  <nz-select style="width: 15%" (ngModelChange)="loadAndDrawSprite($event,customPaletteColors)"
              nzShowSearch
              nzAllowClear
              nzPlaceHolder="Choose sprite position"
@@ -43,6 +43,7 @@
       *ngFor="let customPalette of customPalettes"
       [nzLabel]=customPalette.paletteName
       [nzValue]=customPalette
+
       nzCustomContent>
       <div>
         <span>{{customPalette.paletteName}}</span>
