@@ -1,13 +1,14 @@
 <div>
-<app-canvas [hidden]="!isCharacterSelected" [spriteColorIndexes]="spriteColorIndexes" [defaultPaletteColors]="defaultPaletteColors"></app-canvas>
+  <app-canvas [hidden]="!isCharacterSelected" [spriteColorIndexes]="spriteColorIndexes"
+              [customPaletteColors]="customPaletteColors"></app-canvas>
 </div>
 
-<nz-select style="width: 25%" (ngModelChange)="getDefaultPalette($event)"
-  nzShowSearch
-  nzAllowClear
-  nzPlaceHolder="Choose character"
-  [(ngModel)]="selectedCharacterName"
-  [ngModelOptions]="{ standalone: true }"
+<nz-select style="width: 25%" (ngModelChange)="loadAndDrawSelectedCharacter($event)"
+           nzShowSearch
+           nzAllowClear
+           nzPlaceHolder="Choose character"
+           [(ngModel)]="selectedCharacterName"
+           [ngModelOptions]="{ standalone: true }"
 >
   <nz-option
     *ngFor="let characterName of characterNames"
@@ -17,7 +18,7 @@
 </nz-select>
 
 <div id="hidden-elements" [hidden]="!isCharacterSelected">
-  <nz-select style="width: 15%" (ngModelChange)="getSprite($event)"
+  <nz-select style="width: 15%" (ngModelChange)="loadAndDrawSprite($event,customPaletteColors)"
              nzShowSearch
              nzAllowClear
              nzPlaceHolder="Choose sprite position"
@@ -25,13 +26,13 @@
              [ngModelOptions]="{ standalone: true }"
   >
     <nz-option
-      *ngFor="let i of numberOfPostures"
+      *ngFor="let i of postures"
       [nzLabel]=i
       [nzValue]=i
     ></nz-option>
   </nz-select>
 
-  <nz-select style="width: 25%" (ngModelChange)="getCustomPalette($event)"
+  <nz-select style="width: 25%" (ngModelChange)="drawCustomPaletteAndSprite($event)"
              nzShowSearch
              nzAllowClear
              nzPlaceHolder="Choose custom palette"
@@ -42,17 +43,19 @@
       *ngFor="let customPalette of customPalettes"
       [nzLabel]=customPalette.paletteName
       [nzValue]=customPalette
+
       nzCustomContent>
       <div>
         <span>{{customPalette.paletteName}}</span>
-        <span nz-icon nzType="delete" (click)="deletePalette(customPalette.id)" style="float: right"></span>
+        <span nz-icon nzType="delete" (click)="deleteCustomPalette(customPalette.id)" style="float: right"></span>
       </div>
     </nz-option>
   </nz-select>
 
-  <button nz-button nzType="default" (click)="savePalette()">Save</button>
+  <button nz-button nzType="default" (click)="isModalVisible=true">Save</button>
 </div>
 
-<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Modification of palette" (nzOnCancel)="handleCancel()" (nzOnOk)="handleOk()">
-  <input nz-input placeholder="Palette name" #customPaletteInput [(ngModel)]="customPaletteName" />
+<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Modification of palette" (nzOnCancel)="isModalVisible=false"
+          (nzOnOk)="saveCustomPalette()">
+  <input nz-input placeholder="Palette name" #customPaletteInput [(ngModel)]="customPaletteName"/>
 </nz-modal>

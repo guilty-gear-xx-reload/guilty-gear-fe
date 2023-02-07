@@ -2,7 +2,6 @@ import {AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild} from '@a
 import {Rgba} from "../../models/rgba";
 import {SpriteColorIndexes} from "../../models/sprite-color-indexes";
 import {PaletteColors} from "../../models/palette-colors";
-import {delay} from "rxjs/operators";
 
 @Component({
   selector: 'app-canvas',
@@ -10,19 +9,18 @@ import {delay} from "rxjs/operators";
   styleUrls: ['./canvas.component.css']
 })
 export class CanvasComponent implements OnInit, AfterViewInit {
+  PALETTE_SCALE = 9; // increase this to change size of the palette
+  ORIGINAL_PALETTE_WIDTH = 8;
+  ORIGINAL_PALETTE_HEIGHT = 32;
+  PALETTE_WIDTH = this.ORIGINAL_PALETTE_WIDTH * this.PALETTE_SCALE;
+  PALETTE_HEIGHT = this.ORIGINAL_PALETTE_HEIGHT * this.PALETTE_SCALE;
+  DELTA = this.PALETTE_WIDTH / this.ORIGINAL_PALETTE_WIDTH;
 
-  // static variables
-  paletteScale = 9; // increase this to change size of the palette
-  originalPaletteWidth = 8;
-  originalPaletteHeight = 32;
-  paletteWidth = this.originalPaletteWidth * this.paletteScale;
-  paletteHeight = this.originalPaletteHeight * this.paletteScale;
-  delta = this.paletteWidth / this.originalPaletteWidth;
   @Input()
   spriteColorIndexes: SpriteColorIndexes;
 
   @Input()
-  defaultPaletteColors: PaletteColors;
+  customPaletteColors: PaletteColors;
 
 
   @ViewChild('paletteCanvas')
@@ -50,47 +48,38 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   public drawPalette(rgba: Rgba[]) {
     const context = this.paletteCanvas.nativeElement.getContext('2d');
-
     let index = 0;
-    for (let i = 0; i < this.paletteHeight / this.paletteScale; i++) {
-      for (let j = 0; j < this.paletteWidth / this.paletteScale; j++) {
+    for (let i = 0; i < this.PALETTE_HEIGHT / this.PALETTE_SCALE; i++) {
+      for (let j = 0; j < this.PALETTE_WIDTH / this.PALETTE_SCALE; j++) {
         context.fillStyle = this.convertRgbaToCss(index++, rgba);
         context.fillRect(
-          this.delta * j,
-          this.delta * i,
-          this.delta,
-          this.delta
+          this.DELTA * j,
+          this.DELTA * i,
+          this.DELTA,
+          this.DELTA
         );
       }
     }
     this.paletteCanvas.nativeElement.context = context;
   }
 
-  convertRgbaToCss(index, rgba: Rgba[]) {
-    const paletteRgba = rgba[index];
-    return 'rgba(' + paletteRgba.r + ', ' + paletteRgba.g + ', ' + paletteRgba.b + ', 1.0)';
-  }
-
-  public drawSprite(spriteColorIndexes: SpriteColorIndexes) {
-    var startTime = performance.now();
+  public drawSprite(spriteColorIndexes: SpriteColorIndexes, paletteColors: PaletteColors) {
     const imgWidth = spriteColorIndexes.width;
     const imgHeight = spriteColorIndexes.height;
     this.spriteCanvas.nativeElement.width = imgWidth;
     this.spriteCanvas.nativeElement.height = imgHeight;
-
-    var context = this.spriteCanvas.nativeElement.getContext('2d');
-
-    var image = context.createImageData(imgWidth, imgHeight);
-    var data = image.data;
+    const context = this.spriteCanvas.nativeElement.getContext('2d');
+    const image = context.createImageData(imgWidth, imgHeight);
+    const data = image.data;
 
     // draw sprite
-    var x = 0;
-    var y = 0;
+    let x = 0;
+    let y = 0;
     spriteColorIndexes.spriteColorIndexes.forEach(indexToPalette => {
       if (y == imgHeight) {
         return;
       }
-      drawPixel(this.defaultPaletteColors, x, y, indexToPalette);
+      drawPixel(paletteColors, x, y, indexToPalette);
       x++;
       if (x == imgWidth) {
         x = 0;
@@ -99,15 +88,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     });
     swapBuffer();
 
-    var endTime = performance.now();
-
-    //console.log(`Drawing took ${endTime - startTime} milliseconds`);
-
     function drawPixel(palette, x, y, indexToPalette) {
-      var roundedX = Math.round(x);
-      var roundedY = Math.round(y);
+      const roundedX = Math.round(x);
+      const roundedY = Math.round(y);
 
-      var index = 4 * (imgWidth * roundedY + roundedX);
+      const index = 4 * (imgWidth * roundedY + roundedX);
 
       data[index] = palette.rgba[indexToPalette].r;
       data[index + 1] = palette.rgba[indexToPalette].g;
@@ -120,74 +105,60 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
   }
 
-  clickPaletteAndGetRgbColor(event) {
-    var elemLeft = this.paletteCanvas.nativeElement.offsetLeft + this.paletteCanvas.nativeElement.clientLeft;
-    var elemTop = this.paletteCanvas.nativeElement.offsetTop + this.paletteCanvas.nativeElement.clientTop;
-    var x = event.pageX - elemLeft;
-    var y = event.pageY - elemTop;
+  public clickPaletteAndGetRgbColor(event) {
+    const elemLeft = this.paletteCanvas.nativeElement.offsetLeft + this.paletteCanvas.nativeElement.clientLeft;
+    const elemTop = this.paletteCanvas.nativeElement.offsetTop + this.paletteCanvas.nativeElement.clientTop;
+    const x = event.pageX - elemLeft;
+    const y = event.pageY - elemTop;
 
     let context = this.paletteCanvas.nativeElement.getContext('2d');
     let pixelData = context.getImageData(x, y, 1, 1).data;
 
-    var r = pixelData[0];
-    var g = pixelData[1];
-    var b = pixelData[2];
+    const r = pixelData[0];
+    const g = pixelData[1];
+    const b = pixelData[2];
 
-    console.log("r=" + r + ", g=" + g + ", b=" + b);
     CanvasComponent.clickedPaletteIndex = this.calculateClickedPaletteIndex(x, y);
-    console.log(CanvasComponent.clickedPaletteIndex);
     this.colorPicker.nativeElement.value = this.rgbToHex(r, g, b);
     this.colorPicker.nativeElement.click();
   }
 
-  invertHex(hexTripletColor) {
-    var color = hexTripletColor;
-    color = color.substring(1); // remove #
-    color = parseInt(color, 16); // convert to integer
-    color = 0xFFFFFF ^ color; // invert three bytes
-    color = color.toString(16); // convert to hex
-    color = ("000000" + color).slice(-6); // pad with leading zeros
-    color = "#" + color; // prepend #
-    return color;
+  convertRgbaToCss(index, rgba: Rgba[]) {
+    const paletteRgba = rgba[index];
+    return 'rgba(' + paletteRgba.r + ', ' + paletteRgba.g + ', ' + paletteRgba.b + ', 1.0)';
   }
 
+
   random_rgba() {
-    var o = Math.round, r = Math.random, s = 255;
+    const o = Math.round, r = Math.random, s = 255;
     return {
-      r: o(r()*s),
-      g: o(r()*s),
-      b: o(r()*s),
+      r: o(r() * s),
+      g: o(r() * s),
+      b: o(r() * s),
       a: r().toFixed(1)
     }
   }
 
   hoverPaletteAndGetCurrentIndex(event) {
-    console.log("1")
     if (this.spriteColorIndexes === undefined || this.spriteColorIndexes === null) {
       return;
     }
     let spriteIndexes = this.spriteColorIndexes.spriteColorIndexes;
     // get hovered index
-    var elemLeft = this.paletteCanvas.nativeElement.offsetLeft + this.paletteCanvas.nativeElement.clientLeft;
-    var elemTop = this.paletteCanvas.nativeElement.offsetTop + this.paletteCanvas.nativeElement.clientTop;
-    var x = event.pageX - elemLeft;
-    var y = event.pageY - elemTop;
-
-
-    var hoveredPaletteIndex = this.calculateClickedPaletteIndex(x, y);
-
-    /// hover
-
+    const elemLeft = this.paletteCanvas.nativeElement.offsetLeft + this.paletteCanvas.nativeElement.clientLeft;
+    const elemTop = this.paletteCanvas.nativeElement.offsetTop + this.paletteCanvas.nativeElement.clientTop;
+    let x = event.pageX - elemLeft;
+    let y = event.pageY - elemTop;
+    const hoveredPaletteIndex = this.calculateClickedPaletteIndex(x, y);
     // prepare canvas
     let spriteWidth = this.spriteColorIndexes.width;
     let spriteHeight = this.spriteColorIndexes.height
-    var context = this.spriteCanvas.nativeElement.getContext('2d');
-    var image = context.createImageData(spriteWidth, spriteHeight);
-    var data = image.data;
-
+    const context = this.spriteCanvas.nativeElement.getContext('2d');
+    const image = context.createImageData(spriteWidth, spriteHeight);
+    const data = image.data;
     // draw sprite
-    var x = 0;
-    var y = 0;
+    x = 0;
+    y = 0;
 
     for (const i in spriteIndexes) {
       if (y == this.spriteColorIndexes.height) {
@@ -195,15 +166,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
 
       if (spriteIndexes[i] === hoveredPaletteIndex) {
-        let hexColor = this.rgbToHex(
-          this.defaultPaletteColors.rgba[spriteIndexes[i]].r,
-          this.defaultPaletteColors.rgba[spriteIndexes[i]].g,
-          this.defaultPaletteColors.rgba[spriteIndexes[i]].b)
-        let invertedHexColor = this.invertHex(hexColor);
-        let invertedRgbaColor = this.hexToRgb(invertedHexColor);
-        hoverPixel(this.defaultPaletteColors, x, y, spriteIndexes[i], this.random_rgba());
+        hoverPixel(this.customPaletteColors, x, y, spriteIndexes[i], this.random_rgba());
       } else {
-        drawPixel(this.defaultPaletteColors, x, y, spriteIndexes[i]);
+        drawPixel(this.customPaletteColors, x, y, spriteIndexes[i]);
       }
 
       x++;
@@ -213,12 +178,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
       }
     }
     swapBuffer();
+
     function drawPixel(palette, x, y, indexToPalette) {
-      var roundedX = Math.round(x);
-      var roundedY = Math.round(y);
-
-      var index = 4 * (spriteWidth * roundedY + roundedX);
-
+      const roundedX = Math.round(x);
+      const roundedY = Math.round(y);
+      const index = 4 * (spriteWidth * roundedY + roundedX);
       data[index] = palette.rgba[indexToPalette].r;
       data[index + 1] = palette.rgba[indexToPalette].g;
       data[index + 2] = palette.rgba[indexToPalette].b;
@@ -226,10 +190,9 @@ export class CanvasComponent implements OnInit, AfterViewInit {
     }
 
     function hoverPixel(palette, x, y, indexToPalette, hoveredColor) {
-      var roundedX = Math.round(x);
-      var roundedY = Math.round(y);
-
-      var index = 4 * (spriteWidth * roundedY + roundedX);
+      const roundedX = Math.round(x);
+      const roundedY = Math.round(y);
+      const index = 4 * (spriteWidth * roundedY + roundedX);
 
       data[index] = hoveredColor.r;
       data[index + 1] = hoveredColor.g;
@@ -243,17 +206,11 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   }
 
-  getElementPosition(element) {
-    var rect = element.getBoundingClientRect();
-    return {x: rect.left, y: rect.top};
-  }
-
-
   calculateClickedPaletteIndex(x, y) {
-    let roundedUpX = Math.ceil(x / this.paletteScale);
-    let roundedDownY = Math.floor(y / this.paletteScale);
+    let roundedUpX = Math.ceil(x / this.PALETTE_SCALE);
+    let roundedDownY = Math.floor(y / this.PALETTE_SCALE);
 
-    return this.originalPaletteWidth * roundedDownY + roundedUpX - 1;
+    return this.ORIGINAL_PALETTE_WIDTH * roundedDownY + roundedUpX - 1;
   }
 
   rgbToHex(r, g, b) {
@@ -261,36 +218,31 @@ export class CanvasComponent implements OnInit, AfterViewInit {
   }
 
   componentToHex(c) {
-    var hex = c.toString(16);
+    const hex = c.toString();
     return hex.length == 1 ? "0" + hex : hex;
   }
 
   onInputPaletteColor(event) {
     const colorPickerRgba = this.hexToRgb(event.target.value);
     const selectedPaletteIndex = CanvasComponent.clickedPaletteIndex;
-    console.log("XXXXXXXXXXXX")
-    console.log(this.defaultPaletteColors)
-    console.log("YYYY" + selectedPaletteIndex)
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].r = colorPickerRgba.r;
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].g = colorPickerRgba.g;
-    this.defaultPaletteColors.rgba[selectedPaletteIndex].b = colorPickerRgba.b;
-    this.drawSprite(this.spriteColorIndexes);
-
-    var context = this.paletteCanvas.nativeElement.getContext('2d');
-
+    this.customPaletteColors.rgba[selectedPaletteIndex].r = colorPickerRgba.r;
+    this.customPaletteColors.rgba[selectedPaletteIndex].g = colorPickerRgba.g;
+    this.customPaletteColors.rgba[selectedPaletteIndex].b = colorPickerRgba.b;
+    this.drawSprite(this.spriteColorIndexes, this.customPaletteColors);
+    const context = this.paletteCanvas.nativeElement.getContext('2d');
     context.fillStyle = 'rgb(' + colorPickerRgba.r + ',' + colorPickerRgba.g + ',' + colorPickerRgba.b + ')';
-    var coordsByIndex = this.calculateCoordsByPaletteIndex(selectedPaletteIndex);
+    const coordsByIndex = this.calculateCoordsByPaletteIndex(selectedPaletteIndex);
     context.fillRect(
-      this.delta * coordsByIndex.x,
-      this.delta * coordsByIndex.y,
-      this.delta,
-      this.delta
+      this.DELTA * coordsByIndex.x,
+      this.DELTA * coordsByIndex.y,
+      this.DELTA,
+      this.DELTA
     );
     this.paletteCanvas.nativeElement.getContext('2d').context = context;
   }
 
   hexToRgb(hex) {
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
@@ -300,8 +252,8 @@ export class CanvasComponent implements OnInit, AfterViewInit {
 
   calculateCoordsByPaletteIndex(index) {
     return {
-      x: index % this.originalPaletteWidth,
-      y: Math.trunc(index / this.originalPaletteWidth)
+      x: index % this.ORIGINAL_PALETTE_WIDTH,
+      y: Math.trunc(index / this.ORIGINAL_PALETTE_WIDTH)
     }
   }
 
